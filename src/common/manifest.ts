@@ -24,7 +24,7 @@ export const CONFIG_LOGGING_VERBOSITY = 'loggingVerbosity';
 export const CONFIG_LOGGING_VERBOSITY_PREFERENCE = `${PACKAGE_NAME}.${CONFIG_LOGGING_VERBOSITY}`;
 export const DEFAULT_LOGGING_VERBOSITY = 'warn';
 export const CONFIG_DEBUG_TYPES = 'debugTypes';
-export const DEFAULT_DEBUG_TYPES = ['gdb', 'embedded-debug', 'arm-debugger'];
+export const DEFAULT_DEBUG_TYPES = ['gdb', 'embedded-debug', 'arm-debugger', 'gdbtarget'];
 
 // MAUs (Minimum Addressable Units)
 // - Bytes per MAU
