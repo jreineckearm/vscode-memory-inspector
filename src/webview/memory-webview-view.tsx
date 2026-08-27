@@ -22,7 +22,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { HOST_EXTENSION } from 'vscode-messenger-common';
 import * as manifest from '../common/manifest';
-import { createMemoryFromRead, Memory } from '../common/memory';
+import { compareMemories, createMemoryFromRead, Memory } from '../common/memory';
 import { BigIntMemoryRange, doOverlap, getAddressLength, getAddressString, WrittenMemory } from '../common/memory-range';
 import {
     applyMemoryType,
@@ -70,6 +70,7 @@ export interface MemoryAppState extends MemoryState, MemoryViewSettings {
     sessions: Session[];
     sessionContext: SessionContext;
     effectiveAddressLength: number;
+    memoryRefreshId: number;
     decorations: Decoration[];
     hoverService: HoverService;
     columns: ColumnStatus[];
@@ -127,6 +128,7 @@ class App extends React.Component<{}, MemoryAppState> {
             sessionContext: DEFAULT_SESSION_CONTEXT,
             memory: undefined,
             effectiveAddressLength: 0,
+            memoryRefreshId: 0,
             configuredReadArguments: initialReadArguments,
             activeReadArguments: initialReadArguments,
             decorations: [],
@@ -257,6 +259,7 @@ class App extends React.Component<{}, MemoryAppState> {
                 configuredReadArguments={this.state.configuredReadArguments}
                 activeReadArguments={this.state.activeReadArguments}
                 memory={this.state.memory}
+                memoryRefreshId={this.state.memoryRefreshId}
                 decorations={this.state.decorations}
                 hoverService={this.state.hoverService}
                 columns={this.state.columns}
@@ -341,7 +344,21 @@ class App extends React.Component<{}, MemoryAppState> {
             ));
 
             const memory = createMemoryFromRead(response);
-            this.setState({ memory, decorations: decorationService.decorations });
+            const decorations = decorationService.decorations;
+            this.setState(previousState => {
+                const hasMemoryChanged = !compareMemories(previousState.memory, memory);
+                const hasDecorationsChanged = previousState.decorations !== decorations;
+                if (!hasMemoryChanged && !hasDecorationsChanged) {
+                    // eslint-disable-next-line no-null/no-null
+                    return null;
+                }
+                return {
+                    memory: hasMemoryChanged ? memory : previousState.memory,
+                    decorations,
+                    // PrimeReact memoizes cells by row data. Update the row marker when its rendered content changes.
+                    memoryRefreshId: previousState.memoryRefreshId + 1
+                };
+            });
             messenger.sendRequest(setOptionsType, HOST_EXTENSION, memoryOptions);
         } catch (ex) {
             // Do not show old results if the current search provided no memory

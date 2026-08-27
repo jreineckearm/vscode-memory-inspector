@@ -133,6 +133,7 @@ interface MemoryTableProps extends TableRenderOptions, MemoryDataDisplaySettings
     configuredReadArguments: Required<ReadMemoryArguments>;
     activeReadArguments: Required<ReadMemoryArguments>;
     memory?: Memory;
+    memoryRefreshId: number;
     decorations: Decoration[];
     effectiveAddressLength: number;
     hoverService: HoverService;
@@ -151,13 +152,15 @@ export interface MemoryRowData {
     rowIndex: number;
     startAddress: bigint;
     endAddress: bigint;
+    refreshId: number;
 }
 
 export namespace MemoryRowData {
     export function is(value: unknown): value is MemoryRowData {
         return typeof value === 'object' && typeof (value as MemoryRowData).rowIndex === 'number'
             && typeof (value as MemoryRowData).startAddress === 'bigint'
-            && typeof (value as MemoryRowData).endAddress === 'bigint';
+            && typeof (value as MemoryRowData).endAddress === 'bigint'
+            && typeof (value as MemoryRowData).refreshId === 'number';
     }
 }
 
@@ -299,7 +302,7 @@ export class MemoryTable extends React.PureComponent<MemoryTableProps, MemoryTab
         if (memory) {
             const memorySizeOptions = MemorySizeOptions.create(this.props, this.state);
             const options = this.createMemoryRowListOptions(memory, memorySizeOptions);
-            rows = this.createTableRows(memory, options);
+            rows = this.createTableRows(memory, options, this.props.memoryRefreshId);
         }
 
         const props = this.createScrollingBehaviorSpecificProperties(this.createDataTableProperties(rows));
@@ -533,11 +536,11 @@ export class MemoryTable extends React.PureComponent<MemoryTableProps, MemoryTab
         );
     }
 
-    protected createTableRows = memoize((memory: Memory, options: MemoryRowListOptions): MemoryRowData[] => {
+    protected createTableRows = memoize((memory: Memory, options: MemoryRowListOptions, refreshId: number): MemoryRowData[] => {
         const rows: MemoryRowData[] = [];
         for (let i = 0; i < options.numRows; i++) {
             const startAddress = memory.address + options.bigMausPerRow * BigInt(i);
-            rows.push(this.createMemoryRow(i, startAddress, options));
+            rows.push(this.createMemoryRow(i, startAddress, options, refreshId));
         }
 
         return rows;
@@ -551,11 +554,12 @@ export class MemoryTable extends React.PureComponent<MemoryTableProps, MemoryTab
         return { numRows, mausPerRow, bigMausPerRow };
     };
 
-    protected createMemoryRow(rowIndex: number, startAddress: bigint, memoryTableOptions: MemoryRowListOptions): MemoryRowData {
+    protected createMemoryRow(rowIndex: number, startAddress: bigint, memoryTableOptions: MemoryRowListOptions, refreshId: number): MemoryRowData {
         return {
             rowIndex,
             startAddress,
-            endAddress: startAddress + memoryTableOptions.bigMausPerRow
+            endAddress: startAddress + memoryTableOptions.bigMausPerRow,
+            refreshId
         };
     }
 
