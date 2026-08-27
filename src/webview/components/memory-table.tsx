@@ -153,6 +153,7 @@ export interface MemoryRowData {
     startAddress: bigint;
     endAddress: bigint;
     refreshId: number;
+    selectionId: number;
 }
 
 export namespace MemoryRowData {
@@ -160,7 +161,8 @@ export namespace MemoryRowData {
         return typeof value === 'object' && typeof (value as MemoryRowData).rowIndex === 'number'
             && typeof (value as MemoryRowData).startAddress === 'bigint'
             && typeof (value as MemoryRowData).endAddress === 'bigint'
-            && typeof (value as MemoryRowData).refreshId === 'number';
+            && typeof (value as MemoryRowData).refreshId === 'number'
+            && typeof (value as MemoryRowData).selectionId === 'number';
     }
 }
 
@@ -183,6 +185,7 @@ export interface MemoryTableState {
      */
     groupsPerRowToRender: number;
     selection?: MemoryTableSelection;
+    selectionId: number;
     hoverContent: React.ReactNode;
 }
 
@@ -221,6 +224,7 @@ export class MemoryTable extends React.PureComponent<MemoryTableProps, MemoryTab
     protected initState(): void {
         this.state = {
             groupsPerRowToRender: 1,
+            selectionId: 0,
             hoverContent: <></>,
         };
     }
@@ -258,7 +262,7 @@ export class MemoryTable extends React.PureComponent<MemoryTableProps, MemoryTab
         // Reset selection
         const selection = this.state.selection;
         if (selection && (hasMemoryChanged || hasOptionsChanged)) {
-            this.setState(prev => ({ ...prev, selection: undefined }));
+            this.setState(prev => ({ ...prev, selection: undefined, selectionId: prev.selectionId + 1 }));
         }
 
         // update the groups per row to render if the display options that impact the available width may have changed or we didn't have a memory before
@@ -302,7 +306,7 @@ export class MemoryTable extends React.PureComponent<MemoryTableProps, MemoryTab
         if (memory) {
             const memorySizeOptions = MemorySizeOptions.create(this.props, this.state);
             const options = this.createMemoryRowListOptions(memory, memorySizeOptions);
-            rows = this.createTableRows(memory, options, this.props.memoryRefreshId);
+            rows = this.createTableRows(memory, options, this.props.memoryRefreshId, this.state.selectionId);
         }
 
         const props = this.createScrollingBehaviorSpecificProperties(this.createDataTableProperties(rows));
@@ -441,7 +445,7 @@ export class MemoryTable extends React.PureComponent<MemoryTableProps, MemoryTab
     }
 
     protected setSelection = (selection?: MemoryTableSelection) => {
-        this.setState(prev => ({ ...prev, selection: selection }));
+        this.setState(prev => ({ ...prev, selection, selectionId: prev.selectionId + 1 }));
     };
 
     protected onColumnResizeEnd = () => {
@@ -536,11 +540,11 @@ export class MemoryTable extends React.PureComponent<MemoryTableProps, MemoryTab
         );
     }
 
-    protected createTableRows = memoize((memory: Memory, options: MemoryRowListOptions, refreshId: number): MemoryRowData[] => {
+    protected createTableRows = memoize((memory: Memory, options: MemoryRowListOptions, refreshId: number, selectionId: number): MemoryRowData[] => {
         const rows: MemoryRowData[] = [];
         for (let i = 0; i < options.numRows; i++) {
             const startAddress = memory.address + options.bigMausPerRow * BigInt(i);
-            rows.push(this.createMemoryRow(i, startAddress, options, refreshId));
+            rows.push(this.createMemoryRow(i, startAddress, options, refreshId, selectionId));
         }
 
         return rows;
@@ -554,12 +558,13 @@ export class MemoryTable extends React.PureComponent<MemoryTableProps, MemoryTab
         return { numRows, mausPerRow, bigMausPerRow };
     };
 
-    protected createMemoryRow(rowIndex: number, startAddress: bigint, memoryTableOptions: MemoryRowListOptions, refreshId: number): MemoryRowData {
+    protected createMemoryRow(rowIndex: number, startAddress: bigint, memoryTableOptions: MemoryRowListOptions, refreshId: number, selectionId: number): MemoryRowData {
         return {
             rowIndex,
             startAddress,
             endAddress: startAddress + memoryTableOptions.bigMausPerRow,
-            refreshId
+            refreshId,
+            selectionId
         };
     }
 
