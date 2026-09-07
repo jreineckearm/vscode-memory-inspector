@@ -345,20 +345,16 @@ class App extends React.Component<{}, MemoryAppState> {
 
             const memory = createMemoryFromRead(response);
             const decorations = decorationService.decorations;
-            this.setState(previousState => {
-                const hasMemoryChanged = !compareMemories(previousState.memory, memory);
-                const hasDecorationsChanged = previousState.decorations !== decorations;
-                if (!hasMemoryChanged && !hasDecorationsChanged) {
-                    // eslint-disable-next-line no-null/no-null
-                    return null;
-                }
-                return {
+            const hasMemoryChanged = !compareMemories(this.state.memory, memory);
+            const hasDecorationsChanged = this.state.decorations !== decorations;
+            if (hasMemoryChanged || hasDecorationsChanged) {
+                this.setState(previousState => ({
                     memory: hasMemoryChanged ? memory : previousState.memory,
                     decorations,
                     // PrimeReact memoizes cells by row data. Update the row marker when its rendered content changes.
                     memoryRefreshId: previousState.memoryRefreshId + 1
-                };
-            });
+                }));
+            }
             messenger.sendRequest(setOptionsType, HOST_EXTENSION, memoryOptions);
         } catch (ex) {
             // Do not show old results if the current search provided no memory

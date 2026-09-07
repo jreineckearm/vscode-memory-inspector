@@ -29,7 +29,7 @@ export function compareMemories(first: Memory | undefined, second: Memory | unde
     if (first === second) {
         return true;
     }
-    if (first === undefined || second === undefined || first.address !== second.address || first.bytes.length !== second.bytes.length) {
+    if (!first || !second || first.address !== second.address || first.bytes.length !== second.bytes.length) {
         return false;
     }
     return first.bytes.every((byte, index) => byte === second.bytes[index]);
