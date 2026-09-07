@@ -1,5 +1,6 @@
 /********************************************************************************
  * Copyright (C) 2024 EclipseSource.
+ * Copyright (C) 2026 Arm and others.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v. 2.0 which is available at
@@ -19,6 +20,19 @@ import { ReadMemoryArguments, ReadMemoryResult } from './messaging';
 export interface Memory {
     address: bigint;
     bytes: Uint8Array;
+}
+
+/**
+ * Returns whether two memory snapshots describe the same address and bytes.
+ */
+export function compareMemories(first: Memory | undefined, second: Memory | undefined): boolean {
+    if (first === second) {
+        return true;
+    }
+    if (!first || !second || first.address !== second.address || first.bytes.length !== second.bytes.length) {
+        return false;
+    }
+    return first.bytes.every((byte, index) => byte === second.bytes[index]);
 }
 
 export function createMemoryFromRead(result: ReadMemoryResult, request?: ReadMemoryArguments): Memory {

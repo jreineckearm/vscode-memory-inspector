@@ -36,6 +36,7 @@ interface MemoryWidgetProps extends MemoryDataDisplaySettings {
     configuredReadArguments: Required<ReadMemoryArguments>;
     activeReadArguments: Required<ReadMemoryArguments>;
     memory?: Memory;
+    memoryRefreshId: number;
     title: string;
     decorations: Decoration[];
     hoverService: HoverService;
@@ -125,6 +126,7 @@ export class MemoryWidget extends React.Component<MemoryWidgetProps, MemoryWidge
                 hoverService={this.props.hoverService}
                 columnOptions={this.props.columns.filter(candidate => candidate.active)}
                 memory={this.props.memory}
+                memoryRefreshId={this.props.memoryRefreshId}
                 endianness={this.props.endianness}
                 bytesPerMau={this.props.bytesPerMau}
                 mausPerGroup={this.props.mausPerGroup}

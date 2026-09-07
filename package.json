@@ -370,7 +370,8 @@
           "default": [
             "gdb",
             "embedded-debug",
-            "arm-debugger"
+            "arm-debugger",
+            "gdbtarget"
           ],
           "description": "C-based debuggers to activate (requires debug session restart)"
         },
